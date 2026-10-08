@@ -15,12 +15,14 @@
     --bg: #f4f7f6; --surface: #ffffff; --muted: #edf2f0; --ink: #0d1f1c; --ink2: #4c5f5b; --ink3: #6f807c;
     --border: rgba(13,31,28,0.08); --grid: #e1e6e4; --accent: #0f6f68; --accent-soft: rgba(15,111,104,0.12);
     --shadow: 0 1px 2px rgba(13,31,28,0.05), 0 12px 32px -16px rgba(13,31,28,0.22);
+    --loss: #a63a3a;
   }
   @media (prefers-color-scheme: dark) {
     :root {
       --bg: #0b1614; --surface: #11201d; --muted: #162622; --ink: #f2f6f5; --ink2: #b7c6c2; --ink3: #8a9b96;
       --border: rgba(255,255,255,0.08); --grid: #223330; --accent: #29b3a6; --accent-soft: rgba(41,179,166,0.16);
       --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 14px 32px -16px rgba(0,0,0,0.6);
+      --loss: #e88a8a;
     }
   }
   html { background: var(--bg); }
@@ -75,7 +77,14 @@
   .chip.on { display: inline-flex; }
   .chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   .rows { list-style: none; margin: 0; padding: 0 0 8px; }
-  .row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; padding: 10px 18px; align-items: baseline; }
+  .row, .colhead { display: grid; grid-template-columns: minmax(0, 1fr) 58px 36px; gap: 4px 10px; padding: 10px 18px; align-items: baseline; }
+  .colhead { padding: 0 18px 4px; font-size: 11px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink3); }
+  .colhead span { text-align: right; }
+  .colhead span:first-child { text-align: left; }
+  .pct { text-align: right; font-size: 13.5px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--accent); white-space: nowrap; }
+  .pct.neg { color: var(--loss); }
+  .pct.list { font-weight: 600; font-style: italic; color: var(--ink3); }
+  .pct.na { color: var(--ink3); font-weight: 400; }
   .row + .row { box-shadow: inset 0 1px 0 var(--grid); }
   .name { font-size: 14.5px; font-weight: 600; line-height: 1.25; }
   .spec { font-size: 12.5px; color: var(--ink3); font-weight: 400; margin-left: 6px; white-space: nowrap; }
@@ -123,6 +132,7 @@
       <div class="title" id="listTitle">By product</div>
       <button class="chip" id="clear" type="button">All days ✕</button>
     </div>
+    <div class="colhead" aria-hidden="true"><span>Product</span><span>Profit</span><span>Cases</span></div>
     <ul class="rows" id="rows"></ul>
   </section>
 
@@ -209,7 +219,8 @@
 
     var gen = d.generatedAt ? new Date(d.generatedAt) : null;
     $('foot').textContent = (gen && !isNaN(gen) ? 'Updated ' + gen.toLocaleString([], { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) + ' · ' : '') +
-      'Counts whole cases on confirmed sales orders. Loose pieces and bundles are not included.';
+      'Counts whole cases on confirmed sales orders. Loose pieces and bundles are not included. ' +
+      'Profit = (price before GST − landed cost) ÷ price before GST, at the prices charged; grey italic = not sold yet, so at list price.';
   }
 
   function drawChart(range) {
@@ -294,12 +305,25 @@
     if (state.sel) $('listTitle').textContent += ' · ' + plural(total, 'case');
   }
 
+  // Profit % of the net (ex-GST) price. Italic grey = no sale yet, so it is
+  // worked out from the list price; red = priced below the landed cost.
+  function profit(p) {
+    var v = p.profitPct, c = 'pct';
+    if (v == null) return el('div', 'pct na', '–');
+    if (v < 0) c += ' neg';
+    if (p.profitBasis === 'list') c += ' list';
+    var t = el('div', c, (v < 0 ? '−' : '') + Math.abs(v).toFixed(1) + '%');
+    t.title = p.profitBasis === 'list' ? 'At list price (not sold yet)' : 'At the prices actually charged';
+    return t;
+  }
+
   function row(x, top, none) {
     var li = el('li', 'row' + (none ? ' none' : ''));
     var nm = el('div', 'name', x.p.name);
     var spec = [x.p.size, x.p.pack ? x.p.pack + '/case' : ''].filter(Boolean).join(' · ');
     if (spec) nm.appendChild(el('span', 'spec', spec));
     li.appendChild(nm);
+    li.appendChild(profit(x.p));
     li.appendChild(el('div', 'n', num(x.q)));
     if (!none) {
       var m = el('div', 'meter'); var i = document.createElement('i');
