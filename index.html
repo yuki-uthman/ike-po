@@ -1,0 +1,337 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Duta Cases</title>
+<meta name="description" content="Cases of CV Duta stock sold so far at MRH Investment.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@700;800&family=Source+Sans+3:wght@400;600;700&display=swap">
+<style>
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  :root {
+    --bg: #f4f7f6; --surface: #ffffff; --muted: #edf2f0; --ink: #0d1f1c; --ink2: #4c5f5b; --ink3: #6f807c;
+    --border: rgba(13,31,28,0.08); --grid: #e1e6e4; --accent: #0f6f68; --accent-soft: rgba(15,111,104,0.12);
+    --shadow: 0 1px 2px rgba(13,31,28,0.05), 0 12px 32px -16px rgba(13,31,28,0.22);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0b1614; --surface: #11201d; --muted: #162622; --ink: #f2f6f5; --ink2: #b7c6c2; --ink3: #8a9b96;
+      --border: rgba(255,255,255,0.08); --grid: #223330; --accent: #29b3a6; --accent-soft: rgba(41,179,166,0.16);
+      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 14px 32px -16px rgba(0,0,0,0.6);
+    }
+  }
+  html { background: var(--bg); }
+  body {
+    margin: 0; min-height: 100vh; background: var(--bg); color: var(--ink);
+    font-family: "Source Sans 3", system-ui, -apple-system, "Segoe UI", sans-serif;
+    -webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent;
+  }
+  .shell { max-width: 720px; margin: 0 auto; padding: 18px 16px calc(28px + env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 14px; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 18px; box-shadow: var(--shadow); }
+
+  .eyebrow { font-size: 13px; font-weight: 600; color: var(--ink2); letter-spacing: 0.01em; padding: 4px 2px 0; }
+  .eyebrow b { color: var(--ink); font-weight: 700; }
+
+  /* ---- hero ---- */
+  .hero { padding: 18px 18px 16px; }
+  .total { display: flex; align-items: baseline; gap: 10px; font-family: Manrope, sans-serif; font-weight: 800; font-size: 64px; line-height: 1; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+  .unit { font-size: 18px; font-weight: 700; color: var(--ink2); letter-spacing: 0; }
+  .sub { margin-top: 10px; font-size: 14px; color: var(--ink2); line-height: 1.45; }
+  .sub b { color: var(--ink); font-weight: 600; }
+  .pending { margin-top: 12px; display: inline-flex; gap: 8px; align-items: center; font-size: 13px; color: var(--ink2); background: var(--muted); border-radius: 999px; padding: 6px 12px; }
+  .pending i { width: 8px; height: 8px; border-radius: 50%; border: 2px solid var(--ink3); display: inline-block; }
+
+  /* ---- chart ---- */
+  .charthead { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; padding: 16px 18px 0; }
+  .title { font-family: Manrope, sans-serif; font-weight: 700; font-size: 15px; }
+  .hint { font-size: 12.5px; color: var(--ink3); }
+  .chart { display: flex; gap: 10px; height: 190px; padding: 6px 14px 14px 12px; }
+  .axis { position: relative; flex: 0 0 26px; margin-top: 22px; margin-bottom: 26px; }
+  .axis span { position: absolute; right: 0; transform: translateY(-50%); font-size: 10.5px; color: var(--ink3); font-variant-numeric: tabular-nums; }
+  .plotwrap { position: relative; flex: 1; min-width: 0; }
+  .grid { position: absolute; left: 0; right: 0; top: 22px; bottom: 26px; pointer-events: none; }
+  .grid i { position: absolute; left: 0; right: 0; height: 1px; background: var(--grid); }
+  .plot { position: relative; height: 100%; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; }
+  .plot::-webkit-scrollbar { display: none; }
+  .bars { display: flex; gap: 6px; height: 100%; min-width: 100%; width: max-content; }
+  .bar { position: relative; flex: 1 0 34px; display: flex; flex-direction: column; align-items: center; border: 0; background: none; padding: 0; font: inherit; color: inherit; cursor: pointer; }
+  .barcol { flex: 1; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; padding-top: 22px; }
+  .val { font-size: 12px; font-weight: 700; color: var(--ink); margin-bottom: 4px; font-variant-numeric: tabular-nums; line-height: 1; height: 12px; }
+  .val.zero { color: transparent; }
+  .fill { width: 62%; max-width: 34px; min-height: 2px; border-radius: 5px 5px 2px 2px; background: var(--accent); transition: height 300ms cubic-bezier(0.2,0.8,0.2,1), opacity 0.2s; }
+  .fill.zero { background: var(--grid); min-height: 2px; height: 2px !important; }
+  .lbl { height: 26px; display: flex; align-items: center; font-size: 11px; color: var(--ink3); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .bars.has-sel .bar:not(.sel) .fill { opacity: 0.35; }
+  .bar.sel .lbl { color: var(--ink); font-weight: 700; }
+  .bar:hover .fill, .bar:focus-visible .fill { filter: brightness(1.12); }
+  .bar:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 8px; }
+
+  /* ---- product list ---- */
+  .listhead { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 16px 18px 6px; }
+  .chip { display: none; align-items: center; gap: 6px; border: 0; cursor: pointer; font: inherit; font-size: 12.5px; font-weight: 600; color: var(--accent); background: var(--accent-soft); border-radius: 999px; padding: 5px 11px; }
+  .chip.on { display: inline-flex; }
+  .chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .rows { list-style: none; margin: 0; padding: 0 0 8px; }
+  .row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; padding: 10px 18px; align-items: baseline; }
+  .row + .row { box-shadow: inset 0 1px 0 var(--grid); }
+  .name { font-size: 14.5px; font-weight: 600; line-height: 1.25; }
+  .spec { font-size: 12.5px; color: var(--ink3); font-weight: 400; margin-left: 6px; white-space: nowrap; }
+  .n { font-family: Manrope, sans-serif; font-weight: 800; font-size: 16px; font-variant-numeric: tabular-nums; text-align: right; }
+  .meter { grid-column: 1 / -1; height: 6px; border-radius: 3px; background: var(--muted); overflow: hidden; }
+  .meter i { display: block; height: 100%; border-radius: 3px; background: var(--accent); transition: width 300ms cubic-bezier(0.2,0.8,0.2,1); }
+  .row.none .name, .row.none .n { color: var(--ink3); }
+  .row.none .n { font-weight: 700; }
+  .divider { padding: 12px 18px 6px; font-size: 12px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink3); box-shadow: inset 0 1px 0 var(--grid); }
+  .empty { padding: 22px 18px; color: var(--ink2); font-size: 14px; }
+
+  .foot { text-align: center; font-size: 12px; color: var(--ink3); padding: 2px 0; line-height: 1.5; }
+  .err { padding: 14px 16px; border-radius: 14px; background: rgba(140,47,47,0.10); color: #8c2f2f; font-size: 14px; }
+  @media (prefers-color-scheme: dark) { .err { background: rgba(224,133,133,0.12); color: #e08585; } }
+  @media (max-width: 380px) { .total { font-size: 54px; } }
+  @media (prefers-reduced-motion: reduce) { .fill, .meter i { transition: none; } }
+</style>
+</head>
+<body>
+<main class="shell" id="app">
+  <div class="eyebrow"><b>CV Duta</b> · MRH Investment</div>
+
+  <section class="card hero" aria-live="polite">
+    <div class="total"><span id="total">–</span><span class="unit" id="unit">cases sold</span></div>
+    <div class="sub" id="sub">Loading…</div>
+    <div class="pending" id="pending" hidden><i></i><span id="pendingText"></span></div>
+  </section>
+
+  <section class="card" id="chartCard" hidden>
+    <div class="charthead">
+      <div class="title">Cases sold per day</div>
+      <div class="hint" id="chartHint">Tap a day to filter</div>
+    </div>
+    <div class="chart">
+      <div class="axis" id="axis" aria-hidden="true"></div>
+      <div class="plotwrap">
+        <div class="grid" id="grid" aria-hidden="true"></div>
+        <div class="plot" id="plot"><div class="bars" id="bars"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card" id="listCard" hidden>
+    <div class="listhead">
+      <div class="title" id="listTitle">By product</div>
+      <button class="chip" id="clear" type="button">All days ✕</button>
+    </div>
+    <ul class="rows" id="rows"></ul>
+  </section>
+
+  <div class="foot" id="foot"></div>
+</main>
+
+<script>
+(function () {
+  'use strict';
+  var DEFAULT_URL = 'https://raw.githubusercontent.com/yuki-uthman/ike-data/main/data/duta-cases.json';
+  // ?data=local.json is for trying the page against a file next to it; only
+  // plain relative paths are accepted so a crafted link can't point elsewhere.
+  var override = new URLSearchParams(location.search).get('data');
+  var DATA_URL = override && /^[\w.\-\/]+$/.test(override) && override.indexOf('..') < 0 ? override : DEFAULT_URL;
+  var MV_OFFSET_MS = 5 * 3600 * 1000;
+  var MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var WEEKDAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+  var $ = function (id) { return document.getElementById(id); };
+  var state = { data: null, sel: null, lastBars: '' };
+
+  function num(n) { return (Math.round(n * 100) / 100).toLocaleString('en-US'); }
+  function parts(iso) { var p = iso.split('-'); return { y: +p[0], m: +p[1] - 1, d: +p[2] }; }
+  function utc(iso) { var p = parts(iso); return Date.UTC(p.y, p.m, p.d); }
+  function isoOf(ms) { return new Date(ms).toISOString().slice(0, 10); }
+  function short(iso) { var p = parts(iso); return p.d + ' ' + MONTHS[p.m]; }
+  function long(iso) { var p = parts(iso); return WEEKDAYS[new Date(utc(iso)).getUTCDay()] + ' ' + p.d + ' ' + MONTHS[p.m]; }
+  function mvToday() { return isoOf(Date.now() + MV_OFFSET_MS); }
+  function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+  function plural(n, w) { return n + ' ' + w + (n === 1 ? '' : 's'); }
+
+  // Every day from the first sale to today, so a quiet day is a visible gap
+  // rather than the chart quietly skipping it.
+  function dayRange(days) {
+    if (!days.length) return [];
+    var byDate = {}; days.forEach(function (d) { byDate[d.date] = d; });
+    var end = Math.max(utc(days[days.length - 1].date), utc(mvToday()));
+    var out = [];
+    for (var t = utc(days[0].date); t <= end; t += 86400000) {
+      var iso = isoOf(t);
+      out.push(byDate[iso] || { date: iso, cases: 0, orders: 0, byProduct: {} });
+    }
+    return out;
+  }
+
+  function niceMax(v) {
+    if (v <= 4) return 4;
+    var mag = Math.pow(10, Math.floor(Math.log10(v))), f = v / mag;
+    var step = f <= 1 ? 1 : f <= 2 ? 2 : f <= 5 ? 5 : 10;
+    return step * mag;
+  }
+
+  function render() {
+    var d = state.data;
+    var days = d.days || [], range = dayRange(days);
+    var sold = days.filter(function (x) { return x.cases; });
+
+    $('total').textContent = num(d.totalCases);
+    $('unit').textContent = d.totalCases === 1 ? 'case sold' : 'cases sold';
+
+    var orders = days.reduce(function (s, x) { return s + x.orders; }, 0);
+    var sub = $('sub'); sub.textContent = '';
+    if (sold.length) {
+      var last = sold[sold.length - 1];
+      var b = el('b', null, short(days[0].date));
+      sub.appendChild(document.createTextNode('Since ')); sub.appendChild(b);
+      sub.appendChild(document.createTextNode(' · ' + plural(orders, 'order') + ' · latest sale '));
+      sub.appendChild(el('b', null, short(last.date)));
+      sub.appendChild(document.createTextNode(' (' + plural(last.cases, 'case') + ')'));
+    } else {
+      sub.textContent = 'No confirmed sales yet.';
+    }
+
+    var pend = $('pending');
+    if (d.quoted && d.quoted.cases > 0) {
+      $('pendingText').textContent = num(d.quoted.cases) + ' more ' + (d.quoted.cases === 1 ? 'case' : 'cases') + ' quoted, not confirmed yet';
+      pend.hidden = false;
+    } else pend.hidden = true;
+
+    drawChart(range);
+    drawList();
+    $('chartCard').hidden = !range.length;
+    $('listCard').hidden = false;
+
+    var gen = d.generatedAt ? new Date(d.generatedAt) : null;
+    $('foot').textContent = (gen && !isNaN(gen) ? 'Updated ' + gen.toLocaleString([], { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) + ' · ' : '') +
+      'Counts whole cases on confirmed sales orders. Loose pieces and bundles are not included.';
+  }
+
+  function drawChart(range) {
+    var max = niceMax(Math.max.apply(null, range.map(function (x) { return x.cases; }).concat([1])));
+    var axis = $('axis'), grid = $('grid'), bars = $('bars');
+    axis.textContent = ''; grid.textContent = '';
+    [0, 0.5, 1].forEach(function (f) {
+      var pos = (1 - f) * 100 + '%';
+      var s = el('span', null, num(max * f)); s.style.top = pos; axis.appendChild(s);
+      var g = document.createElement('i'); g.style.top = pos; grid.appendChild(g);
+    });
+
+    // Rebuild only when the days changed, so a background refresh doesn't
+    // reset the scroll position or restart the grow-in animation.
+    var key = range.map(function (x) { return x.date + ':' + x.cases; }).join('|') + '|' + max;
+    var fresh = key !== state.lastBars;
+    if (fresh) {
+      bars.textContent = '';
+      var prev = $('plot').scrollLeft;
+      range.forEach(function (x) {
+        var btn = el('button', 'bar'); btn.type = 'button'; btn.dataset.date = x.date;
+        btn.setAttribute('aria-label', long(x.date) + ': ' + plural(x.cases, 'case') + (x.orders ? ', ' + plural(x.orders, 'order') : ''));
+        var col = el('div', 'barcol');
+        col.appendChild(el('div', 'val' + (x.cases ? '' : ' zero'), num(x.cases)));
+        var fill = el('div', 'fill' + (x.cases ? '' : ' zero')); fill.style.height = '0px';
+        fill.dataset.h = x.cases / max;
+        col.appendChild(fill); btn.appendChild(col);
+        btn.appendChild(el('div', 'lbl', short(x.date)));
+        btn.addEventListener('click', function () { select(state.sel === x.date ? null : x.date); });
+        bars.appendChild(btn);
+      });
+      state.lastBars = key;
+      requestAnimationFrame(function () {
+        var colH = bars.querySelector('.barcol');
+        var avail = colH ? colH.clientHeight - 22 - 16 : 100; // padding-top and the value label
+        Array.prototype.forEach.call(bars.querySelectorAll('.fill'), function (f) {
+          if (!f.classList.contains('zero')) f.style.height = Math.max(3, avail * (+f.dataset.h)) + 'px';
+        });
+        var plot = $('plot');
+        plot.scrollLeft = prev || plot.scrollWidth; // first draw: show the latest days
+      });
+    }
+    applySel();
+  }
+
+  function applySel() {
+    var bars = $('bars');
+    bars.classList.toggle('has-sel', !!state.sel);
+    Array.prototype.forEach.call(bars.children, function (b) {
+      var on = b.dataset.date === state.sel;
+      b.classList.toggle('sel', on);
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+    $('chartHint').textContent = state.sel ? long(state.sel) : 'Tap a day to filter';
+  }
+
+  function select(date) { state.sel = date; applySel(); drawList(); }
+
+  function drawList() {
+    var d = state.data, rows = $('rows'); rows.textContent = '';
+    var day = state.sel && (d.days || []).filter(function (x) { return x.date === state.sel; })[0];
+    var qtyOf = function (p) { return state.sel ? ((day && day.byProduct[String(p.id)]) || 0) : p.cases; };
+
+    var list = (d.products || []).map(function (p) { return { p: p, q: qtyOf(p) }; });
+    // Archived products that never sold have nothing to show; keep any that did.
+    list = list.filter(function (x) { return x.p.active !== false || x.q; });
+    var moved = list.filter(function (x) { return x.q; }).sort(function (a, b) { return b.q - a.q || a.p.name.localeCompare(b.p.name); });
+    var idle = list.filter(function (x) { return !x.q; }).sort(function (a, b) { return a.p.name.localeCompare(b.p.name) || a.p.size.localeCompare(b.p.size); });
+    var top = moved.length ? moved[0].q : 1;
+
+    var total = moved.reduce(function (s, x) { return s + x.q; }, 0);
+    $('listTitle').textContent = state.sel ? 'Sold on ' + long(state.sel) : 'By product';
+    $('clear').classList.toggle('on', !!state.sel);
+
+    if (state.sel && !moved.length) rows.appendChild(el('li', 'empty', 'No cases sold this day.'));
+
+    moved.forEach(function (x) { rows.appendChild(row(x, top, false)); });
+    if (idle.length) {
+      if (moved.length || state.sel) rows.appendChild(el('li', 'divider', (state.sel ? 'Not sold this day' : 'Not sold yet') + ' · ' + idle.length));
+      idle.forEach(function (x) { rows.appendChild(row(x, top, true)); });
+    }
+    if (state.sel) $('listTitle').textContent += ' · ' + plural(total, 'case');
+  }
+
+  function row(x, top, none) {
+    var li = el('li', 'row' + (none ? ' none' : ''));
+    var nm = el('div', 'name', x.p.name);
+    var spec = [x.p.size, x.p.pack ? x.p.pack + '/case' : ''].filter(Boolean).join(' · ');
+    if (spec) nm.appendChild(el('span', 'spec', spec));
+    li.appendChild(nm);
+    li.appendChild(el('div', 'n', num(x.q)));
+    if (!none) {
+      var m = el('div', 'meter'); var i = document.createElement('i');
+      i.style.width = Math.max(2, (x.q / top) * 100) + '%'; m.appendChild(i); li.appendChild(m);
+    }
+    return li;
+  }
+
+  function load() {
+    return fetch(DATA_URL, { cache: 'no-store' })
+      .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(function (data) {
+        if (!data || !Array.isArray(data.products)) throw new Error('unexpected file');
+        state.data = data;
+        if (state.sel && !(data.days || []).some(function (x) { return x.date === state.sel; })) state.sel = null;
+        var old = document.querySelector('.err'); if (old) old.remove();
+        render();
+      })
+      .catch(function (e) {
+        if (state.data) return; // keep showing the last good numbers
+        $('sub').textContent = '';
+        var box = el('div', 'err', 'Could not load the sales numbers (' + e.message + '). Pull down to try again.');
+        $('app').insertBefore(box, $('app').children[1]);
+      });
+  }
+
+  $('clear').addEventListener('click', function () { select(null); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && state.sel) select(null); });
+  document.addEventListener('visibilitychange', function () { if (!document.hidden) load(); });
+  setInterval(function () { if (!document.hidden) load(); }, 60000);
+  load();
+})();
+</script>
+</body>
+</html>
