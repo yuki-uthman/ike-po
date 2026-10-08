@@ -1,4 +1,4 @@
-# Duta Cases
+# Ike PO
 
 A single static page showing **how many cases of CV Duta stock MRH Investment
 has sold so far** — one big number, a bar per day, and every product ranked.
@@ -26,7 +26,7 @@ tap it again, **All days ✕**, or press Esc to go back.
 
 **Enable GitHub Pages**: Settings → Pages → Source: "Deploy from a branch" →
 Branch: `main`, folder `/ (root)`. The page will be at
-`https://<your-username>.github.io/duta-cases/`.
+`https://<your-username>.github.io/ike-po/`.
 
 Nothing else is configured here. The numbers come from
 [ike-data](https://github.com/yuki-uthman/ike-data), which owns the Odoo
