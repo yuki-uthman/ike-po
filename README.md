@@ -55,9 +55,8 @@ its profit if all the cases sell, and a **Total profit** at the bottom:
 
 Net price is before GST: what was actually charged for a product that has sold,
 the list price for one that has not (italic note on the row). Landed cost is the
-product's cost in Odoo. A product priced below cost shows a **negative** profit
-in red, and the total includes it. (The % beside products on the Sales tab is
-floored at 0%; these money figures are not, or the total would be overstated.)
+product's cost in Odoo. A product priced at or below cost shows 0 profit, not a loss, like the % beside products on the Sales tab, so the total can read
+higher than the true profit.
 
 Containers come from `shipments` in `duta-cases.json`: each confirmed CV Duta
 purchase order in Odoo, plus the **proforma** container kept by hand in

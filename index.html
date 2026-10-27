@@ -15,14 +15,12 @@
     --bg: #f4f7f6; --surface: #ffffff; --muted: #edf2f0; --ink: #0d1f1c; --ink2: #4c5f5b; --ink3: #6f807c;
     --border: rgba(13,31,28,0.08); --grid: #e1e6e4; --accent: #0f6f68; --accent-soft: rgba(15,111,104,0.12);
     --shadow: 0 1px 2px rgba(13,31,28,0.05), 0 12px 32px -16px rgba(13,31,28,0.22);
-    --loss: #a63a3a;
   }
   @media (prefers-color-scheme: dark) {
     :root {
       --bg: #0b1614; --surface: #11201d; --muted: #162622; --ink: #f2f6f5; --ink2: #b7c6c2; --ink3: #8a9b96;
       --border: rgba(255,255,255,0.08); --grid: #223330; --accent: #29b3a6; --accent-soft: rgba(41,179,166,0.16);
       --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 14px 32px -16px rgba(0,0,0,0.6);
-      --loss: #e88a8a;
     }
   }
   html { background: var(--bg); }
@@ -106,7 +104,6 @@
   .prow { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 3px 12px; padding: 11px 18px; align-items: baseline; }
   .prow + .prow { box-shadow: inset 0 1px 0 var(--grid); }
   .amt { font-family: Manrope, sans-serif; font-weight: 800; font-size: 16px; font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
-  .amt.neg { color: var(--loss); }
   .calc { grid-column: 1 / -1; font-size: 12.5px; color: var(--ink3); font-variant-numeric: tabular-nums; line-height: 1.4; }
   .calc i { font-style: italic; }
   .prow.sum { box-shadow: inset 0 2px 0 var(--ink); padding-top: 14px; margin-top: 4px; }
@@ -311,7 +308,7 @@
 
     var sum = el('li', 'prow sum');
     sum.appendChild(el('div', 'name', 'Total profit'));
-    sum.appendChild(el('div', 'amt' + (profitSum < 0 ? ' neg' : ''), cur + ' ' + money(profitSum, 2)));
+    sum.appendChild(el('div', 'amt', cur + ' ' + money(profitSum, 2)));
     sum.appendChild(el('div', 'calc', cnt(cases, 'case') + ' across ' + plural(list.length, 'product')));
     rows.appendChild(sum);
 
@@ -330,7 +327,7 @@
     var spec = [p.size, p.pack ? p.pack + '/case' : ''].filter(Boolean).join(' · ');
     if (spec) nm.appendChild(el('span', 'spec', spec));
     li.appendChild(nm);
-    li.appendChild(el('div', 'amt' + (l.profit < 0 ? ' neg' : ''), money(l.profit, 2)));
+    li.appendChild(el('div', 'amt', money(l.profit, 2)));
     var calc = el('div', 'calc', cnt(l.cases, 'case') + ' × ' + money(l.profitPerCase, 2) + ' · price ' + money(l.netPrice, 2) + ' − cost ' + money(l.cost, 2));
     if (p.profitBasis === 'list') calc.appendChild(el('i', null, ' · list price, not sold yet'));
     li.appendChild(calc);
@@ -342,7 +339,7 @@
     var stamp = gen && !isNaN(gen) ? 'Updated ' + gen.toLocaleString([], { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) + ' · ' : '';
     $('foot').textContent = state.view !== 'sales' ?
       stamp + 'Profit = cases in the shipment × (price before GST − landed cost), at the price actually charged; ' +
-      'products not sold yet use the list price. Red = priced below cost. A proforma shipment assumes today\'s landed costs, except products whose invoice price changed.' :
+      'products not sold yet use the list price. At or below cost counts as 0. A proforma shipment assumes today\'s landed costs, except products whose invoice price changed.' :
       stamp + 'Counts whole cases on confirmed sales orders. Loose pieces and bundles are not included. ' +
       'Profit = (price before GST − landed cost) ÷ price before GST, at the prices charged; at or below cost shows 0%; grey italic = not sold yet, so at list price.';
   }
