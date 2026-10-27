@@ -45,8 +45,32 @@ the other dashboards' data). The counting rules are tested offline by
 To try the page against a local file, put a copy of `duta-cases.json` beside
 `index.html`, serve the folder, and open `index.html?data=duta-cases.json`.
 
+## Profit tabs
+
+Beside **Sales** there is one **Profit** tab per container (Profit 1, Profit 2 …;
+`#ship1`, `#ship2` in the URL). Each lists every product on that container with
+its profit if all the cases sell, and a **Total profit** at the bottom:
+
+    profit = cases in the container x (net price - landed cost)
+
+Net price is before GST: what was actually charged for a product that has sold,
+the list price for one that has not (italic note on the row). Landed cost is the
+product's cost in Odoo. A product priced below cost shows a **negative** profit
+in red, and the total includes it. (The % beside products on the Sales tab is
+floored at 0%; these money figures are not, or the total would be overstated.)
+
+Containers come from `shipments` in `duta-cases.json`: each confirmed CV Duta
+purchase order in Odoo, plus the **proforma** container kept by hand in
+`ike-data/shipments/next-container.json` until its order exists in Odoo. A
+proforma container assumes the same prices, freight and markup as before, so each
+product costs what Odoo says today. The exception is a product whose invoice price
+changed (the two Maitos): its cost is the invoice USD price x 21.61 x 1.35, the same
+conversion and landed markup as the first container. Selling prices are unchanged.
+
 ## Visibility
 
 GitHub Pages on a free plan needs a **public** repository, so the page is
-reachable by anyone with the URL. It shows product names and case counts only —
-no customer names, prices or amounts.
+reachable by anyone with the URL. It shows product names, case counts and, on
+the Profit tabs, **landed costs, selling prices and profit amounts**. That was
+the owner's decision. Customer names are never shown. Do not commit the
+supplier's proforma invoice spreadsheet (prices, bank details) to this repo.

@@ -15,12 +15,14 @@
     --bg: #f4f7f6; --surface: #ffffff; --muted: #edf2f0; --ink: #0d1f1c; --ink2: #4c5f5b; --ink3: #6f807c;
     --border: rgba(13,31,28,0.08); --grid: #e1e6e4; --accent: #0f6f68; --accent-soft: rgba(15,111,104,0.12);
     --shadow: 0 1px 2px rgba(13,31,28,0.05), 0 12px 32px -16px rgba(13,31,28,0.22);
+    --loss: #a63a3a;
   }
   @media (prefers-color-scheme: dark) {
     :root {
       --bg: #0b1614; --surface: #11201d; --muted: #162622; --ink: #f2f6f5; --ink2: #b7c6c2; --ink3: #8a9b96;
       --border: rgba(255,255,255,0.08); --grid: #223330; --accent: #29b3a6; --accent-soft: rgba(41,179,166,0.16);
       --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 14px 32px -16px rgba(0,0,0,0.6);
+      --loss: #e88a8a;
     }
   }
   html { background: var(--bg); }
@@ -34,6 +36,12 @@
 
   .eyebrow { font-size: 13px; font-weight: 600; color: var(--ink2); letter-spacing: 0.01em; padding: 4px 2px 0; }
   .eyebrow b { color: var(--ink); font-weight: 700; }
+
+  /* ---- view switch ---- */
+  .tabs { display: flex; flex-wrap: wrap; gap: 4px; padding: 4px; background: var(--muted); border-radius: 999px; align-self: flex-start; }
+  .tabs button { border: 0; cursor: pointer; font: inherit; font-size: 13.5px; font-weight: 600; color: var(--ink2); background: none; border-radius: 999px; padding: 6px 16px; }
+  .tabs button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px rgba(13,31,28,0.12); }
+  .tabs button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
   /* ---- hero ---- */
   .hero { padding: 18px 18px 16px; }
@@ -93,6 +101,18 @@
   .divider { padding: 12px 18px 6px; font-size: 12px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink3); box-shadow: inset 0 1px 0 var(--grid); }
   .empty { padding: 22px 18px; color: var(--ink2); font-size: 14px; }
 
+  /* ---- profit list: name and amount on one line, the working underneath ---- */
+  .colhead.two { grid-template-columns: minmax(0, 1fr) auto; }
+  .prow { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 3px 12px; padding: 11px 18px; align-items: baseline; }
+  .prow + .prow { box-shadow: inset 0 1px 0 var(--grid); }
+  .amt { font-family: Manrope, sans-serif; font-weight: 800; font-size: 16px; font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+  .amt.neg { color: var(--loss); }
+  .calc { grid-column: 1 / -1; font-size: 12.5px; color: var(--ink3); font-variant-numeric: tabular-nums; line-height: 1.4; }
+  .calc i { font-style: italic; }
+  .prow.sum { box-shadow: inset 0 2px 0 var(--ink); padding-top: 14px; margin-top: 4px; }
+  .prow.sum .name { font-family: Manrope, sans-serif; font-weight: 800; font-size: 16px; }
+  .prow.sum .amt { font-size: 22px; }
+
   .foot { text-align: center; font-size: 12px; color: var(--ink3); padding: 2px 0; line-height: 1.5; }
   .err { padding: 14px 16px; border-radius: 14px; background: rgba(140,47,47,0.10); color: #8c2f2f; font-size: 14px; }
   @media (prefers-color-scheme: dark) { .err { background: rgba(224,133,133,0.12); color: #e08585; } }
@@ -103,6 +123,10 @@
 <body>
 <main class="shell" id="app">
   <div class="eyebrow"><b>CV Duta</b> · MRH Investment</div>
+
+  <div class="tabs" id="tabs" role="group" aria-label="View">
+    <button type="button" id="tabSales" aria-pressed="true">Sales</button>
+  </div>
 
   <section class="card hero" aria-live="polite">
     <div class="total"><span id="total">–</span><span class="unit" id="unit">cases sold</span></div>
@@ -133,6 +157,15 @@
     <ul class="rows" id="rows"></ul>
   </section>
 
+  <section class="card" id="profitCard" hidden>
+    <div class="listhead">
+      <div class="title" id="profitTitle">Profit if the whole shipment sells</div>
+      <div class="hint" id="profitHint"></div>
+    </div>
+    <div class="colhead two" aria-hidden="true"><span>Product</span><span>Profit</span></div>
+    <ul class="rows" id="profitRows"></ul>
+  </section>
+
   <div class="foot" id="foot"></div>
 </main>
 
@@ -149,7 +182,12 @@
   var WEEKDAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 
   var $ = function (id) { return document.getElementById(id); };
-  var state = { data: null, sel: null, lastBars: '' };
+  // 'sales', or the 0-based index of a shipment: #ship1 is the first container.
+  function viewFromHash() {
+    var m = /^#ship(\d+)$/.exec(location.hash);
+    return m && +m[1] >= 1 ? +m[1] - 1 : 'sales';
+  }
+  var state = { data: null, sel: null, lastBars: '', view: viewFromHash() };
 
   function num(n) { return (Math.round(n * 100) / 100).toLocaleString('en-US'); }
   function parts(iso) { var p = iso.split('-'); return { y: +p[0], m: +p[1] - 1, d: +p[2] }; }
@@ -159,7 +197,13 @@
   function long(iso) { var p = parts(iso); return WEEKDAYS[new Date(utc(iso)).getUTCDay()] + ' ' + p.d + ' ' + MONTHS[p.m]; }
   function mvToday() { return isoOf(Date.now() + MV_OFFSET_MS); }
   function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+  // Whole currency for headline figures; the minus is a real minus sign.
+  function money(n, dp) {
+    var v = Math.round(Math.abs(n) * Math.pow(10, dp || 0)) / Math.pow(10, dp || 0);
+    return (n < 0 && v ? '−' : '') + v.toLocaleString('en-US', { minimumFractionDigits: dp || 0, maximumFractionDigits: dp || 0 });
+  }
   function plural(n, w) { return n + ' ' + w + (n === 1 ? '' : 's'); }
+  function cnt(n, w) { return num(n) + ' ' + w + (n === 1 ? '' : 's'); }
 
   // Every day from the first sale to today, so a quiet day is a visible gap
   // rather than the chart quietly skipping it.
@@ -183,8 +227,27 @@
   }
 
   function render() {
-    var d = state.data;
+    var d = state.data, ships = d.shipments || [];
+    if (state.view !== 'sales' && !ships[state.view]) state.view = 'sales';
+    drawTabs(ships);
+    if (state.view === 'sales') renderSales(d); else renderProfit(d, state.view);
+  }
+
+  function drawTabs(ships) {
+    var tabs = $('tabs');
+    Array.prototype.slice.call(tabs.querySelectorAll('.ptab')).forEach(function (b) { b.remove(); });
+    $('tabSales').setAttribute('aria-pressed', state.view === 'sales' ? 'true' : 'false');
+    ships.forEach(function (sh, i) {
+      var b = el('button', 'ptab', 'Profit ' + (i + 1)); b.type = 'button';
+      b.setAttribute('aria-pressed', state.view === i ? 'true' : 'false');
+      b.addEventListener('click', function () { setView(i); });
+      tabs.appendChild(b);
+    });
+  }
+
+  function renderSales(d) {
     var days = d.days || [], range = dayRange(days);
+    $('profitCard').hidden = true;
     var sold = days.filter(function (x) { return x.cases; });
 
     $('total').textContent = num(d.totalCases);
@@ -213,10 +276,74 @@
     drawList();
     $('chartCard').hidden = !range.length;
     $('listCard').hidden = false;
+    drawFoot(d);
+  }
 
+  // What one container earns if every case sells: cases ordered x (net price -
+  // landed cost), summed. Every figure comes from the data file.
+  var SHIP_STATUS = { received: 'received', ordered: 'ordered', proforma: 'proforma' };
+
+  function renderProfit(d, idx) {
+    var cur = d.currency || 'MVR', sh = d.shipments[idx];
+    var byId = {}; (d.products || []).forEach(function (p) { byId[p.id] = p; });
+    var list = sh.lines.filter(function (l) { return l.cases > 0 && l.profit != null && byId[l.productId]; });
+    $('chartCard').hidden = true; $('listCard').hidden = true; $('pending').hidden = true;
+    $('profitCard').hidden = false;
+    $('profitTitle').textContent = 'Shipment ' + (idx + 1) + ' · ' + (SHIP_STATUS[sh.status] || sh.status);
+    $('profitHint').textContent = sh.ref;
+
+    var rows = $('profitRows'); rows.textContent = '';
+    if (!list.length) {
+      $('total').textContent = '–'; $('unit').textContent = cur + ' profit';
+      $('sub').textContent = 'Nothing to show for this shipment yet.';
+      rows.appendChild(el('li', 'empty', 'Nothing to show yet.'));
+      drawFoot(d);
+      return;
+    }
+
+    list.sort(function (a, b) { return b.profit - a.profit || byId[a.productId].name.localeCompare(byId[b.productId].name); });
+    var cases = 0, profitSum = 0, cost = 0, sales = 0;
+    list.forEach(function (l) {
+      cases += l.cases; profitSum += l.profit;
+      cost += l.cost * l.cases; sales += l.netPrice * l.cases;
+      rows.appendChild(profitRow(l, byId[l.productId]));
+    });
+
+    var sum = el('li', 'prow sum');
+    sum.appendChild(el('div', 'name', 'Total profit'));
+    sum.appendChild(el('div', 'amt' + (profitSum < 0 ? ' neg' : ''), cur + ' ' + money(profitSum, 2)));
+    sum.appendChild(el('div', 'calc', cnt(cases, 'case') + ' across ' + plural(list.length, 'product')));
+    rows.appendChild(sum);
+
+    $('total').textContent = money(profitSum);
+    $('unit').textContent = cur + ' profit';
+    var sub = $('sub'); sub.textContent = '';
+    sub.appendChild(document.createTextNode('If all '));
+    sub.appendChild(el('b', null, num(cases)));
+    sub.appendChild(document.createTextNode(' cases in shipment ' + (idx + 1) + ' sell · landed cost ' + money(cost) + ' · sales ' + money(sales) + ' before GST'));
+    drawFoot(d);
+  }
+
+  function profitRow(l, p) {
+    var li = el('li', 'prow');
+    var nm = el('div', 'name', p.name);
+    var spec = [p.size, p.pack ? p.pack + '/case' : ''].filter(Boolean).join(' · ');
+    if (spec) nm.appendChild(el('span', 'spec', spec));
+    li.appendChild(nm);
+    li.appendChild(el('div', 'amt' + (l.profit < 0 ? ' neg' : ''), money(l.profit, 2)));
+    var calc = el('div', 'calc', cnt(l.cases, 'case') + ' × ' + money(l.profitPerCase, 2) + ' · price ' + money(l.netPrice, 2) + ' − cost ' + money(l.cost, 2));
+    if (p.profitBasis === 'list') calc.appendChild(el('i', null, ' · list price, not sold yet'));
+    li.appendChild(calc);
+    return li;
+  }
+
+  function drawFoot(d) {
     var gen = d.generatedAt ? new Date(d.generatedAt) : null;
-    $('foot').textContent = (gen && !isNaN(gen) ? 'Updated ' + gen.toLocaleString([], { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) + ' · ' : '') +
-      'Counts whole cases on confirmed sales orders. Loose pieces and bundles are not included. ' +
+    var stamp = gen && !isNaN(gen) ? 'Updated ' + gen.toLocaleString([], { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) + ' · ' : '';
+    $('foot').textContent = state.view !== 'sales' ?
+      stamp + 'Profit = cases in the shipment × (price before GST − landed cost), at the price actually charged; ' +
+      'products not sold yet use the list price. Red = priced below cost. A proforma shipment assumes today\'s landed costs, except products whose invoice price changed.' :
+      stamp + 'Counts whole cases on confirmed sales orders. Loose pieces and bundles are not included. ' +
       'Profit = (price before GST − landed cost) ÷ price before GST, at the prices charged; at or below cost shows 0%; grey italic = not sold yet, so at list price.';
   }
 
@@ -346,6 +473,13 @@
       });
   }
 
+  function setView(v) {
+    if (state.view === v) return;
+    state.view = v;
+    try { history.replaceState(null, '', v === 'sales' ? location.pathname + location.search : '#ship' + (v + 1)); } catch (e) { /* file:// or sandboxed */ }
+    if (state.data) render();
+  }
+  $('tabSales').addEventListener('click', function () { setView('sales'); });
   $('clear').addEventListener('click', function () { select(null); });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && state.sel) select(null); });
   document.addEventListener('visibilitychange', function () { if (!document.hidden) load(); });
